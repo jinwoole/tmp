@@ -1,8 +1,0 @@
-version: '3.8'
-
-services:
-  lb-visualization-app:
-    build: .
-    container_name: lb-visualization-app
-    restart: always
-    network_mode: "host"
