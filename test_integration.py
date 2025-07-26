@@ -3,12 +3,11 @@ Integration tests for the Enterprise FastAPI Application with real PostgreSQL.
 These tests require a running PostgreSQL database.
 """
 import os
-import pytest
 import asyncio
 from fastapi.testclient import TestClient
 from sqlalchemy import text
 
-# Set environment variables for real database testing
+# Set environment variables for real database testing BEFORE importing the app
 os.environ["USE_MOCK_DB"] = "false"
 os.environ["DB_HOST"] = "localhost"
 os.environ["DB_PORT"] = "5433"  # Use test database port
@@ -19,55 +18,81 @@ os.environ["DB_PASSWORD"] = "password"
 from main import app
 from app.models.database import db_manager
 from app.models.entities import Base
-from app.config import config
 
 
-@pytest.fixture(scope="session")
-def event_loop():
-    """Create an instance of the default event loop for the test session."""
-    loop = asyncio.get_event_loop_policy().new_event_loop()
-    yield loop
-    loop.close()
-
-
-@pytest.fixture(scope="session", autouse=True)
-async def setup_test_database():
-    """Set up test database before all tests and clean up after."""
+def setup_module():
+    """Setup module - initialize database for all tests."""
+    # Run async setup in sync context
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    
     try:
         # Initialize database connection
-        await db_manager.initialize()
+        loop.run_until_complete(db_manager.initialize())
         
         # Create all tables
         if db_manager.engine:
-            async with db_manager.engine.begin() as conn:
-                await conn.run_sync(Base.metadata.create_all)
-        
-        yield
-        
-        # Clean up after all tests
-        if db_manager.engine:
-            async with db_manager.engine.begin() as conn:
-                await conn.run_sync(Base.metadata.drop_all)
-        
-        await db_manager.close()
+            loop.run_until_complete(_create_tables())
         
     except Exception as e:
-        pytest.skip(f"PostgreSQL not available for integration tests: {e}")
+        print(f"Failed to setup test database: {e}")
+        raise
+    finally:
+        loop.close()
 
 
-@pytest.fixture(autouse=True)
-async def clean_database():
-    """Clean database before each test."""
+def teardown_module():
+    """Teardown module - cleanup database after all tests."""
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    
     try:
+        # Drop all tables
         if db_manager.engine:
-            async with db_manager.engine.begin() as conn:
-                # Clean all data but keep tables
-                await conn.execute(text("TRUNCATE TABLE items RESTART IDENTITY CASCADE"))
-        yield
+            loop.run_until_complete(_drop_tables())
+        
+        # Close database connections
+        loop.run_until_complete(db_manager.close())
+        
     except Exception as e:
-        pytest.skip(f"Database cleanup failed: {e}")
+        print(f"Failed to cleanup test database: {e}")
+    finally:
+        loop.close()
 
 
+async def _create_tables():
+    """Create database tables."""
+    async with db_manager.engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
+
+async def _drop_tables():
+    """Drop database tables."""
+    async with db_manager.engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
+
+
+async def _clean_tables():
+    """Clean all data from tables."""
+    async with db_manager.engine.begin() as conn:
+        await conn.execute(text("TRUNCATE TABLE items RESTART IDENTITY CASCADE"))
+
+
+def setup_function():
+    """Setup function - clean database before each test."""
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    
+    try:
+        if db_manager.engine and db_manager.is_connected:
+            loop.run_until_complete(_clean_tables())
+    except Exception as e:
+        print(f"Failed to clean database: {e}")
+    finally:
+        loop.close()
+
+
+# Create test client
 client = TestClient(app)
 
 

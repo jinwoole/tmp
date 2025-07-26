@@ -38,13 +38,13 @@ UNIT_TEST_FILE="test_main.py"
 
 # Check if Docker Compose is available
 check_docker_compose() {
-    if ! command -v docker-compose &> /dev/null; then
-        print_error "docker-compose is not installed or not in PATH"
+    if ! command -v docker &> /dev/null; then
+        print_error "Docker is not running or not installed"
         exit 1
     fi
     
-    if ! docker --version &> /dev/null; then
-        print_error "Docker is not running or not installed"
+    if ! docker compose version &> /dev/null; then
+        print_error "Docker Compose is not installed or not available"
         exit 1
     fi
     
@@ -53,7 +53,7 @@ check_docker_compose() {
 
 # Check if PostgreSQL test database is running
 check_postgres_test() {
-    if docker-compose ps $TEST_DB_SERVICE | grep -q "Up"; then
+    if docker compose ps $TEST_DB_SERVICE | grep -q "Up"; then
         return 0
     else
         return 1
@@ -69,7 +69,7 @@ wait_for_postgres() {
     print_status "Waiting for PostgreSQL service '$service_name' to be ready..."
     
     while [ $attempt -le $max_attempts ]; do
-        if docker-compose exec -T $service_name pg_isready -U postgres &> /dev/null; then
+        if docker compose exec -T $service_name pg_isready -U postgres &> /dev/null; then
             print_success "PostgreSQL service '$service_name' is ready"
             return 0
         fi
@@ -90,7 +90,7 @@ start_test_db() {
     if check_postgres_test; then
         print_warning "PostgreSQL test database is already running"
     else
-        docker-compose --profile testing up -d $TEST_DB_SERVICE
+        docker compose --profile testing up -d $TEST_DB_SERVICE
         
         if wait_for_postgres $TEST_DB_SERVICE; then
             print_success "PostgreSQL test database started successfully"
@@ -104,7 +104,7 @@ start_test_db() {
 # Stop PostgreSQL test database
 stop_test_db() {
     print_status "Stopping PostgreSQL test database..."
-    docker-compose --profile testing down
+    docker compose --profile testing down
     print_success "PostgreSQL test database stopped"
 }
 
@@ -135,11 +135,32 @@ run_integration_tests() {
     export DB_USER=postgres
     export DB_PASSWORD=password
     
-    if pytest $INTEGRATION_TEST_FILE -v --tb=short; then
+    local database_result=0
+    local api_result=0
+    
+    # Run direct database tests first
+    print_status "Running direct database tests..."
+    if python test_database_direct.py; then
+        print_success "Direct database tests passed"
+    else
+        print_error "Direct database tests failed"
+        database_result=1
+    fi
+    
+    # Run API integration tests
+    print_status "Running API integration tests..."
+    if python test_api_integration.py; then
+        print_success "API integration tests passed"
+    else
+        print_error "API integration tests failed"
+        api_result=1
+    fi
+    
+    if [ $database_result -eq 0 ] && [ $api_result -eq 0 ]; then
         print_success "Integration tests passed"
         return 0
     else
-        print_error "Integration tests failed"
+        print_error "Some integration tests failed"
         return 1
     fi
 }
@@ -173,7 +194,7 @@ cleanup_test_db() {
     print_status "Cleaning up test database..."
     
     if check_postgres_test; then
-        docker-compose exec -T $TEST_DB_SERVICE psql -U postgres -d fastapi_test_db -c "TRUNCATE TABLE items RESTART IDENTITY CASCADE;" &> /dev/null || true
+        docker compose exec -T $TEST_DB_SERVICE psql -U postgres -d fastapi_test_db -c "TRUNCATE TABLE items RESTART IDENTITY CASCADE;" &> /dev/null || true
         print_success "Test database cleaned up"
     else
         print_warning "Test database is not running, skipping cleanup"
@@ -193,7 +214,7 @@ show_status() {
     fi
     
     # Check if dev database is running
-    if docker-compose ps $DEV_DB_SERVICE | grep -q "Up"; then
+    if docker compose ps $DEV_DB_SERVICE | grep -q "Up"; then
         echo -e "  ${GREEN}✓${NC} PostgreSQL Dev Database (port 5432): Running"
     else
         echo -e "  ${RED}✗${NC} PostgreSQL Dev Database (port 5432): Stopped"
