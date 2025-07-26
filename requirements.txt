@@ -1,2 +1,12 @@
+# Core FastAPI dependencies
 fastapi[standard]==0.116.1
 pytest==8.4.1
+
+# PostgreSQL and database dependencies (install when needed)
+# asyncpg==0.29.0
+# sqlalchemy[asyncio]==2.0.36
+
+# Configuration and logging (install when needed)
+# python-dotenv==1.0.1
+# structlog==24.4.0
+# pydantic-settings==2.6.1
