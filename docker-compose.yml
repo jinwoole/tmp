@@ -1,0 +1,78 @@
+version: '3.8'
+
+services:
+  # PostgreSQL 16 for development and testing
+  postgres:
+    image: postgres:16-alpine
+    container_name: fastapi_postgres
+    environment:
+      POSTGRES_DB: fastapi_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d fastapi_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - fastapi_network
+
+  # Test PostgreSQL database (separate from development)
+  postgres_test:
+    image: postgres:16-alpine
+    container_name: fastapi_postgres_test
+    environment:
+      POSTGRES_DB: fastapi_test_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d fastapi_test_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - fastapi_network
+    profiles:
+      - testing
+
+  # FastAPI application (optional - for full stack testing)
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fastapi_app
+    environment:
+      - ENVIRONMENT=development
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=fastapi_db
+      - DB_USER=postgres
+      - DB_PASSWORD=password
+      - LOG_LEVEL=INFO
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - fastapi_network
+    profiles:
+      - full-stack
+
+volumes:
+  postgres_data:
+
+networks:
+  fastapi_network:
+    driver: bridge
