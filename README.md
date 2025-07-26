@@ -1,401 +1,442 @@
-# Enterprise FastAPI Microservice Template
+# FastAPI Enterprise Microservice Template
 
-A complete, production-ready FastAPI microservice template with enterprise-grade features. This template provides everything you need to build, deploy, and maintain a robust microservice.
+A production-ready FastAPI template for building enterprise-grade microservices with comprehensive infrastructure support, security features, and developer productivity tools.
 
 ## 🚀 Quick Start
 
-```bash
-git clone <repository-url>
-cd tmp
-./setup.sh my-service
-cd my-service
-source venv/bin/activate
-fastapi dev main.py
-```
-
-Visit http://127.0.0.1:8000/docs to see your API documentation.
-
-## ✨ Features
-
-### Core Features
-- 🏗️ **Clean Architecture**: Separation of concerns with layered architecture
-- 🗄️ **PostgreSQL Integration**: Async database connections with connection pooling
-- 🔍 **Enterprise Logging**: Structured JSON logging with request tracking
-- ⚡ **High Performance**: Async/await throughout the application
-- 🛡️ **Error Handling**: Comprehensive error handling with custom exceptions
-- 📝 **API Documentation**: Auto-generated OpenAPI/Swagger documentation
-- ✅ **Data Validation**: Pydantic models with business rule validation
-- 🔄 **Health Checks**: Database and application health monitoring
-
-### Enterprise Features
-- 🔐 **JWT Authentication**: Complete auth system with login, registration, and token refresh
-- 📊 **Request Tracking**: Unique request IDs for tracing
-- 🏭 **Configuration Management**: Environment-based configuration with validation
-- 🔒 **Security Middleware**: CORS, rate limiting, and input validation
-- 📈 **Production Ready**: Connection pooling, graceful shutdown
-- 🧪 **Comprehensive Testing**: Full test coverage with async support
-- 📋 **API Standards**: RESTful design with proper HTTP status codes
-- ⚡ **Redis Caching**: Async Redis integration for high-performance caching
-- 🚦 **Rate Limiting**: Configurable rate limiting per IP or user
-- 📊 **Metrics & Monitoring**: Prometheus metrics and health checks
-- 🗄️ **Database Migrations**: Alembic integration for schema management
-- 🎯 **Business Logic Structure**: Organized folder structure for domain logic
-
-## 🏗️ Architecture
-
-```
-app/
-├── api/              # API endpoints and routes
-│   ├── auth.py       # Authentication endpoints  
-│   ├── items.py      # Sample CRUD endpoints
-│   └── monitoring.py # Health checks and metrics
-├── auth/             # Authentication system
-│   ├── models.py     # Auth data models
-│   ├── security.py   # JWT and password utilities
-│   └── dependencies.py # Auth dependencies
-├── business/         # 🎯 Your business logic goes here
-│   ├── models/       # Domain models and DTOs
-│   ├── services/     # Core business logic
-│   ├── interfaces/   # Abstract interfaces
-│   └── exceptions/   # Business exceptions
-├── cache/            # Redis caching
-├── config/           # Configuration management
-├── middleware/       # Custom middleware
-├── models/           # Database models and schemas
-├── monitoring/       # Metrics and monitoring
-├── repositories/     # Data access layer
-├── services/         # Application services
-└── utils/            # Utilities (logging, errors)
-```
-
-## 🛠️ Setup & Installation
-
 ### Prerequisites
-
-- Python 3.8+
-- PostgreSQL 12+ (optional - uses mock DB by default)
-- Redis (optional - caching features)
+- Python 3.9+
+- Docker and Docker Compose
 - Git
 
-### Using the Setup Script (Recommended)
-
-The easiest way to create a new service:
+### Create a New Microservice
 
 ```bash
+# Clone the template
+git clone <repository-url>
+cd fastapi-template
+
+# Create your new service
 ./setup.sh my-awesome-service
 cd my-awesome-service
+
+# Start infrastructure services
+docker compose up -d postgres redis
+
+# Activate virtual environment and run
 source venv/bin/activate
-fastapi dev main.py
-```
-
-The setup script will:
-- ✅ Create a new project directory
-- ✅ Set up Python virtual environment
-- ✅ Install all dependencies  
-- ✅ Configure environment files
-- ✅ Initialize git repository
-- ✅ Set up database migrations
-- ✅ Run tests to verify setup
-
-### Manual Setup
-
-If you prefer manual setup:
-
-1. **Clone and install dependencies:**
-```bash
-git clone <repository-url>
-cd tmp
-pip install -r requirements.txt
-```
-
-2. **Configure environment:**
-```bash
-cp .env.example .env
-# Edit .env with your settings
-```
-
-3. **Set up database (optional):**
-```bash
-# Start PostgreSQL and Redis with Docker
-docker-compose up -d postgres redis
-
-# Run migrations
 alembic upgrade head
-```
-
-4. **Start the application:**
-```bash
 fastapi dev main.py
 ```
+
+Your service will be available at:
+- **API**: http://localhost:8000
+- **Interactive Docs**: http://localhost:8000/docs
+- **Health Check**: http://localhost:8000/health
+- **Metrics**: http://localhost:8000/metrics
+
+## 🏗️ Architecture Overview
+
+```
+my-service/
+├── app/
+│   ├── business/         # 🎯 Your business logic goes here
+│   │   ├── models/       # Domain models and DTOs
+│   │   ├── services/     # Core business logic
+│   │   ├── interfaces/   # Abstract interfaces
+│   │   └── exceptions/   # Business-specific exceptions
+│   ├── api/              # HTTP endpoints and routing
+│   ├── auth/             # Authentication and authorization
+│   ├── cache/            # Redis caching utilities
+│   ├── middleware/       # Custom middleware (rate limiting, etc.)
+│   ├── monitoring/       # Health checks and metrics
+│   ├── models/           # Database entities and schemas
+│   ├── repositories/     # Data access layer
+│   └── services/         # Infrastructure services
+├── alembic/              # Database migrations
+├── tests/                # Test suite
+├── docker-compose.yml    # Local development infrastructure
+└── requirements.txt      # Python dependencies
+```
+
+## 📋 Features
+
+### 🔐 Authentication & Security
+- **JWT-based authentication** with refresh token support
+- **User registration and login** endpoints
+- **Password hashing** with bcrypt
+- **Role-based access control** foundation
+- **CORS configuration** for cross-origin requests
+- **Input validation** with Pydantic models
+
+### 🗄️ Database & Caching
+- **PostgreSQL** with async SQLAlchemy
+- **Redis** for caching and session storage
+- **Alembic** database migrations
+- **Connection pooling** for optimal performance
+- **Automatic cache serialization** (JSON/pickle)
+- **Configurable TTL** settings
+
+### 📊 Monitoring & Observability
+- **Prometheus metrics** for HTTP requests, database, and cache operations
+- **Structured JSON logging** with request ID tracking
+- **Health check endpoints** for Kubernetes liveness/readiness probes
+- **Performance monitoring** with response time tracking
+- **Error tracking** with detailed stack traces
+
+### ⚡ Performance & Scalability
+- **Async/await** throughout the application stack
+- **Rate limiting** middleware with Redis backend
+- **Database connection pooling** for high concurrency
+- **Redis connection pooling** for cache performance
+- **Horizontal scaling** ready (stateless design)
+
+### 🛠️ Developer Experience
+- **Automatic API documentation** with OpenAPI/Swagger
+- **Hot reload** in development mode
+- **Comprehensive test suite** with pytest
+- **Pre-configured Docker** for local development
+- **Type hints** throughout the codebase
+- **Clear separation of concerns** between business logic and infrastructure
 
 ## 🔧 Configuration
 
 ### Environment Variables
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `APP_TITLE` | Application title | `Enterprise FastAPI Application` |
-| `ENVIRONMENT` | Environment (development/staging/production) | `development` |
-| `DEBUG` | Enable debug mode | `false` |
-| `SECRET_KEY` | JWT secret key | `change-in-production` |
-| `DB_HOST` | Database host | `localhost` |
-| `DB_PORT` | Database port | `5432` |
-| `DB_NAME` | Database name | `fastapi_db` |
-| `DB_USER` | Database user | `postgres` |
-| `DB_PASSWORD` | Database password | `password` |
-| `REDIS_HOST` | Redis host | `localhost` |
-| `REDIS_PORT` | Redis port | `6379` |
-| `REDIS_DB` | Redis database | `0` |
-| `LOG_LEVEL` | Logging level | `INFO` |
-| `CORS_ORIGINS` | CORS allowed origins | `*` |
-| `RATE_LIMIT_REQUESTS` | Requests per minute | `100` |
-| `ACCESS_TOKEN_EXPIRE_MINUTES` | JWT token expiry | `30` |
+Create a `.env` file in your service directory:
 
-## 🔐 Authentication
+```env
+# Application
+APP_TITLE="My Awesome Service"
+APP_VERSION="1.0.0"
+ENVIRONMENT="development"
 
-The template includes a complete JWT authentication system:
+# Database
+DB_HOST="localhost"
+DB_PORT="5432"
+DB_NAME="my_service_db"
+DB_USER="postgres"
+DB_PASSWORD="password"
 
-### Register a new user:
-```bash
-curl -X POST "http://localhost:8000/api/v1/auth/register" \
-     -H "Content-Type: application/json" \
-     -d '{
-       "email": "user@example.com",
-       "username": "testuser",
-       "password": "securepassword"
-     }'
+# Redis
+REDIS_HOST="localhost"
+REDIS_PORT="6379"
+REDIS_DB="0"
+
+# Security
+SECRET_KEY="your-secret-key-change-in-production"
+ACCESS_TOKEN_EXPIRE_MINUTES="30"
+
+# Rate Limiting
+RATE_LIMIT_REQUESTS="100"
+RATE_LIMIT_WINDOW="60"
 ```
 
-### Login:
-```bash
-curl -X POST "http://localhost:8000/api/v1/auth/login" \
-     -H "Content-Type: application/x-www-form-urlencoded" \
-     -d "username=testuser&password=securepassword"
-```
+### Docker Compose Services
 
-### Use authenticated endpoints:
-```bash
-curl -X GET "http://localhost:8000/api/v1/auth/me" \
-     -H "Authorization: Bearer <your-token>"
-```
+The template includes a complete Docker Compose setup:
 
-## 📊 API Endpoints
+```yaml
+services:
+  postgres:
+    image: postgres:16-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: my_service_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
 
-### Authentication
-- **POST** `/api/v1/auth/register` - Register new user
-- **POST** `/api/v1/auth/login` - Login (form data)
-- **POST** `/api/v1/auth/login/json` - Login (JSON)
-- **GET** `/api/v1/auth/me` - Get current user info
-- **POST** `/api/v1/auth/refresh` - Refresh access token
-
-### Items Management (Sample CRUD)
-- **GET** `/api/v1/items` - List items with pagination
-- **POST** `/api/v1/items` - Create new item
-- **GET** `/api/v1/items/{item_id}` - Get item by ID
-- **PUT** `/api/v1/items/{item_id}` - Update item
-- **DELETE** `/api/v1/items/{item_id}` - Delete item
-- **GET** `/api/v1/items/search?q={query}` - Search items
-
-### Health & Monitoring
-- **GET** `/api/v1/health` - Basic health check
-- **GET** `/health/detailed` - Detailed component health
-- **GET** `/health/live` - Kubernetes liveness probe
-- **GET** `/health/ready` - Kubernetes readiness probe
-- **GET** `/metrics` - Prometheus metrics
-
-## 🎯 Developing Business Logic
-
-The template provides a clean structure for your business logic in `app/business/`:
-
-### 1. Define Domain Models
-```python
-# app/business/models/product.py
-from decimal import Decimal
-from typing import Optional
-
-class Product:
-    def __init__(self, name: str, price: Decimal, category: str):
-        self.name = name
-        self.price = price
-        self.category = category
-    
-    def apply_discount(self, percentage: Decimal) -> Decimal:
-        return self.price * (1 - percentage / 100)
-```
-
-### 2. Create Business Services
-```python
-# app/business/services/product_service.py
-from app.business.models.product import Product
-from app.business.interfaces.product_repository import ProductRepository
-
-class ProductService:
-    def __init__(self, repository: ProductRepository):
-        self.repository = repository
-    
-    async def create_product(self, product_data: dict) -> Product:
-        # Business validation
-        if product_data['price'] <= 0:
-            raise ValueError("Price must be positive")
-        
-        product = Product(**product_data)
-        return await self.repository.save(product)
-```
-
-### 3. Define Interfaces
-```python
-# app/business/interfaces/product_repository.py
-from abc import ABC, abstractmethod
-from app.business.models.product import Product
-
-class ProductRepository(ABC):
-    @abstractmethod
-    async def save(self, product: Product) -> Product:
-        pass
-    
-    @abstractmethod
-    async def find_by_id(self, product_id: int) -> Optional[Product]:
-        pass
-```
-
-### 4. Handle Business Exceptions
-```python
-# app/business/exceptions/product_exceptions.py
-class InsufficientInventoryError(Exception):
-    def __init__(self, requested: int, available: int):
-        self.requested = requested
-        self.available = available
-        super().__init__(f"Insufficient inventory: requested {requested}, available {available}")
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
 ```
 
 ## 🧪 Testing
 
-Run the comprehensive test suite:
-
+### Run Tests
 ```bash
 # Run all tests
-python -m pytest test_main.py -v
+python -m pytest
 
 # Run with coverage
-python -m pytest test_main.py --cov=app --cov-report=html
+python -m pytest --cov=app
 
-# Run specific test
-python -m pytest test_main.py::test_create_item -v
+# Run specific test file
+python -m pytest tests/test_business_logic.py -v
 ```
 
-Tests cover:
-- ✅ API endpoint functionality
-- ✅ Authentication flows
-- ✅ Business logic validation
-- ✅ Error handling scenarios
-- ✅ Database integration
-- ✅ Cache operations
-- ✅ Rate limiting
-- ✅ Request/response formats
+### Test Categories
+- **Unit tests**: Business logic and utilities
+- **Integration tests**: Database and cache operations
+- **API tests**: HTTP endpoints and authentication
+- **Performance tests**: Load testing and benchmarks
 
-## 🐳 Docker & Deployment
+## 🚀 Deployment
 
-### Development with Docker Compose
-```bash
-# Start all services (PostgreSQL, Redis, App)
-docker-compose up
+### Production Environment
 
-# Start only databases
-docker-compose up -d postgres redis
+1. **Update configuration**:
+```env
+ENVIRONMENT="production"
+SECRET_KEY="your-production-secret-key"
+DB_HOST="your-production-db-host"
+REDIS_HOST="your-production-redis-host"
 ```
 
-### Production Deployment
+2. **Build and deploy**:
 ```bash
-# Build production image
-docker build -t my-service .
+# Build Docker image
+docker build -t my-service:latest .
 
-# Run with environment variables
-docker run -e DB_HOST=prod-db -e REDIS_HOST=prod-redis my-service
+# Run with docker-compose
+docker compose -f docker-compose.prod.yml up -d
 ```
 
-### Kubernetes Ready
-The template includes health check endpoints for Kubernetes:
-- Liveness probe: `GET /health/live`
-- Readiness probe: `GET /health/ready`
+### Kubernetes Deployment
 
-## 📊 Monitoring & Observability
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-service
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: my-service
+  template:
+    metadata:
+      labels:
+        app: my-service
+    spec:
+      containers:
+      - name: my-service
+        image: my-service:latest
+        ports:
+        - containerPort: 8000
+        env:
+        - name: ENVIRONMENT
+          value: "production"
+        livenessProbe:
+          httpGet:
+            path: /health/live
+            port: 8000
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 8000
+```
 
-### Metrics
-The application exposes Prometheus metrics at `/metrics`:
-- HTTP request counts and durations
-- Active connections
-- Database connection pool stats
-- Cache hit/miss rates
-- Custom business metrics
+## 🔨 Development Guide
 
-### Logging
-Structured JSON logging with:
-- Request ID tracking
-- Performance metrics
-- Error categorization
-- Database query logging
+### Adding Business Logic
 
-### Health Checks
-Multiple health check endpoints:
-- `/api/v1/health` - Basic health status
-- `/health/detailed` - Component-wise health
-- `/health/live` - Liveness probe
-- `/health/ready` - Readiness probe
+1. **Create domain models** in `app/business/models/`:
+```python
+from pydantic import BaseModel
 
-## 🔄 Database Migrations
+class BlogPost(BaseModel):
+    title: str
+    content: str
+    author_id: int
+```
 
-The template uses Alembic for database schema management:
+2. **Implement business services** in `app/business/services/`:
+```python
+from app.business.interfaces.blog_repository import BlogRepository
+
+class BlogService:
+    def __init__(self, repository: BlogRepository):
+        self.repository = repository
+    
+    async def create_post(self, post: BlogPost) -> BlogPost:
+        # Your business logic here
+        return await self.repository.create(post)
+```
+
+3. **Add API endpoints** in `app/api/`:
+```python
+from fastapi import APIRouter, Depends
+from app.business.services.blog_service import BlogService
+
+router = APIRouter()
+
+@router.post("/posts")
+async def create_post(
+    post: BlogPost,
+    service: BlogService = Depends()
+):
+    return await service.create_post(post)
+```
+
+### Database Migrations
 
 ```bash
-# Generate migration after model changes
-alembic revision --autogenerate -m "Add new table"
+# Create a new migration
+alembic revision --autogenerate -m "Add blog posts table"
 
 # Apply migrations
 alembic upgrade head
 
-# Rollback migration
+# Rollback to previous version
 alembic downgrade -1
-
-# View migration history
-alembic history
 ```
 
-## 🚀 Production Considerations
+### Custom Middleware
 
-### Security
-- ✅ JWT token-based authentication
-- ✅ Password hashing with bcrypt
-- ✅ CORS configuration
-- ✅ Rate limiting
-- ✅ Input validation
-- ✅ SQL injection prevention
-- ⚠️ Change `SECRET_KEY` in production
-- ⚠️ Use HTTPS in production
-- ⚠️ Configure proper CORS origins
+```python
+from fastapi import Request
+from starlette.middleware.base import BaseHTTPMiddleware
 
-### Performance
-- ✅ Async/await throughout
-- ✅ Database connection pooling
-- ✅ Redis caching
-- ✅ Request/response compression
-- ✅ Prometheus metrics
+class CustomMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        # Pre-processing
+        response = await call_next(request)
+        # Post-processing
+        return response
+```
 
-### Deployment
-- ✅ Docker containerization
-- ✅ Health checks for orchestrators
-- ✅ Environment-based configuration
-- ✅ Graceful shutdown
-- ✅ Database migrations
+## 📊 Monitoring
+
+### Prometheus Metrics
+
+Available metrics:
+- `http_requests_total` - Total HTTP requests by endpoint, method, status
+- `http_request_duration_seconds` - Request duration histogram
+- `database_connections_active` - Active database connections
+- `cache_operations_total` - Cache operations (hit/miss)
+- `redis_connections_total` - Redis connection pool stats
+
+### Health Checks
+
+- **`/health`** - Basic health status
+- **`/health/detailed`** - Detailed component health
+- **`/health/live`** - Kubernetes liveness probe
+- **`/health/ready`** - Kubernetes readiness probe
+
+### Logging
+
+Structured JSON logging example:
+```json
+{
+  "timestamp": "2025-07-26T12:00:00.000Z",
+  "level": "INFO",
+  "logger": "app.business.services",
+  "message": "Blog post created",
+  "user_id": 123,
+  "post_id": 456,
+  "request_id": "req_abc123"
+}
+```
+
+## 🔐 Security
+
+### Authentication Flow
+
+1. **Register user**:
+```bash
+curl -X POST /api/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email": "user@example.com", "username": "user", "password": "secure123"}'
+```
+
+2. **Login and get token**:
+```bash
+curl -X POST /api/v1/auth/login/json \
+  -H "Content-Type: application/json" \
+  -d '{"username": "user", "password": "secure123"}'
+```
+
+3. **Use token in requests**:
+```bash
+curl -H "Authorization: Bearer <token>" /api/v1/protected-endpoint
+```
+
+### Rate Limiting
+
+Configure rate limits per endpoint:
+```python
+from app.middleware.rate_limit import rate_limit
+
+@router.get("/api/v1/data")
+@rate_limit(requests=100, window=60)  # 100 requests per minute
+async def get_data():
+    return {"data": "value"}
+```
+
+## 🛠️ Troubleshooting
+
+### Common Issues
+
+1. **Database connection failed**:
+   - Check PostgreSQL is running: `docker compose ps`
+   - Verify database exists: `docker compose exec postgres psql -U postgres -l`
+
+2. **Redis connection failed**:
+   - Check Redis is running: `docker compose ps`
+   - Test connection: `docker compose exec redis redis-cli ping`
+
+3. **Migration errors**:
+   - Reset migrations: `alembic downgrade base && alembic upgrade head`
+   - Check database schema: `docker compose exec postgres psql -U postgres -d dbname -c "\dt"`
+
+4. **Authentication issues**:
+   - Verify SECRET_KEY is set
+   - Check token expiration settings
+   - Ensure password meets requirements
+
+### Debug Mode
+
+Enable debug logging:
+```env
+LOG_LEVEL="DEBUG"
+DEBUG="true"
+```
+
+### Performance Issues
+
+1. **Database slow queries**:
+   - Check connection pool settings
+   - Add database indexes
+   - Use `EXPLAIN ANALYZE` for query optimization
+
+2. **Cache misses**:
+   - Check Redis connection
+   - Verify TTL settings
+   - Monitor cache hit ratio in metrics
+
+## 📚 Additional Resources
+
+- **FastAPI Documentation**: https://fastapi.tiangolo.com/
+- **SQLAlchemy Async**: https://docs.sqlalchemy.org/en/20/orm/extensions/asyncio.html
+- **Alembic Migrations**: https://alembic.sqlalchemy.org/
+- **Prometheus Monitoring**: https://prometheus.io/docs/
+- **Redis Documentation**: https://redis.io/documentation
 
 ## 🤝 Contributing
 
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Add tests for new features
-5. Ensure all tests pass
+4. Add tests for new functionality
+5. Run the test suite
 6. Submit a pull request
 
 ## 📄 License
 
-This project is licensed under the MIT License.
+This template is released under the MIT License. See LICENSE file for details.
+
+---
+
+**Need help?** Open an issue or check the [evaluation report](TEMPLATE_EVALUATION_REPORT.md) for detailed testing results and recommendations.
