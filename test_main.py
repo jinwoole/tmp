@@ -1,9 +1,13 @@
 """
 Comprehensive test suite for the Enterprise FastAPI Application.
-Tests the new architecture with proper separation of concerns.
+Tests the new architecture with proper separation of concerns using mock database.
 """
+import os
 import pytest
 from fastapi.testclient import TestClient
+
+# Ensure we use mock database for unit tests
+os.environ["USE_MOCK_DB"] = "true"
 
 from main import app
 from app.models.entities import reset_storage

@@ -4,14 +4,14 @@ Provides async database connection with proper connection pooling and error hand
 """
 import asyncio
 import logging
+import os
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator, Optional
 
-# Note: These imports would be available once asyncpg and sqlalchemy are installed
-# from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
-# from sqlalchemy.pool import NullPool
-# from sqlalchemy import event
-# import asyncpg
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+from sqlalchemy.pool import NullPool
+from sqlalchemy import event, text
+import asyncpg
 
 from app.config import config
 
@@ -34,24 +34,35 @@ class DatabaseManager:
         try:
             logger.info("Initializing database connection...")
             
-            # This would be the actual implementation with SQLAlchemy:
-            # self.engine = create_async_engine(
-            #     config.database.url,
-            #     pool_size=config.database.pool_size,
-            #     max_overflow=config.database.max_overflow,
-            #     pool_timeout=config.database.pool_timeout,
-            #     pool_recycle=config.database.pool_recycle,
-            #     echo=config.debug,
-            #     future=True,
-            # )
-            # 
-            # self.session_factory = async_sessionmaker(
-            #     self.engine,
-            #     class_=AsyncSession,
-            #     expire_on_commit=False,
-            # )
+            # Check if we should use mock database (for testing without PostgreSQL)
+            use_mock = os.getenv("USE_MOCK_DB", "false").lower() == "true"
             
-            # For now, simulate successful connection
+            if use_mock:
+                logger.info("Using mock database implementation")
+                self._is_connected = True
+                return
+            
+            # Real PostgreSQL connection
+            self.engine = create_async_engine(
+                config.database.url,
+                pool_size=config.database.pool_size,
+                max_overflow=config.database.max_overflow,
+                pool_timeout=config.database.pool_timeout,
+                pool_recycle=config.database.pool_recycle,
+                echo=config.debug,
+                future=True,
+            )
+            
+            self.session_factory = async_sessionmaker(
+                self.engine,
+                class_=AsyncSession,
+                expire_on_commit=False,
+            )
+            
+            # Test the connection
+            async with self.engine.begin() as conn:
+                await conn.execute(text("SELECT 1"))
+            
             logger.info(f"Database connection initialized successfully")
             logger.info(f"Database URL: {config.database.url}")
             self._is_connected = True
@@ -65,20 +76,25 @@ class DatabaseManager:
         """Close database connections and cleanup."""
         if self.engine:
             logger.info("Closing database connections...")
-            # await self.engine.dispose()
+            await self.engine.dispose()
             self._is_connected = False
             logger.info("Database connections closed")
     
     async def health_check(self) -> bool:
         """Check database connection health."""
         try:
-            # This would be the actual health check:
-            # async with self.session_factory() as session:
-            #     await session.execute(text("SELECT 1"))
-            #     return True
+            # Check if using mock database
+            use_mock = os.getenv("USE_MOCK_DB", "false").lower() == "true"
+            if use_mock:
+                return self._is_connected
             
-            # For now, return the connection status
-            return self._is_connected
+            # Real database health check
+            if not self.session_factory:
+                return False
+                
+            async with self.session_factory() as session:
+                await session.execute(text("SELECT 1"))
+                return True
         except Exception as e:
             logger.error(f"Database health check failed: {e}")
             return False
@@ -86,25 +102,28 @@ class DatabaseManager:
     @asynccontextmanager
     async def get_session(self) -> AsyncGenerator:
         """Get async database session with proper error handling."""
+        # Check if using mock database
+        use_mock = os.getenv("USE_MOCK_DB", "false").lower() == "true"
+        if use_mock:
+            # Mock session for testing
+            class MockSession:
+                async def commit(self): pass
+                async def rollback(self): pass
+                async def close(self): pass
+            yield MockSession()
+            return
+        
         if not self.session_factory:
             raise RuntimeError("Database not initialized")
         
-        # This would be the actual session management:
-        # async with self.session_factory() as session:
-        #     try:
-        #         yield session
-        #         await session.commit()
-        #     except Exception:
-        #         await session.rollback()
-        #         raise
-        
-        # For now, yield a mock session
-        class MockSession:
-            async def commit(self): pass
-            async def rollback(self): pass
-            async def close(self): pass
-        
-        yield MockSession()
+        # Real database session
+        async with self.session_factory() as session:
+            try:
+                yield session
+                await session.commit()
+            except Exception:
+                await session.rollback()
+                raise
     
     @property
     def is_connected(self) -> bool:
