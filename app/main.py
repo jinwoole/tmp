@@ -19,7 +19,12 @@ from fastapi.responses import JSONResponse
 
 from app.config import config
 from app.models.database import init_database, close_database
+from app.cache.redis_client import init_redis, close_redis
 from app.api.items import router as items_router
+from app.api.auth import router as auth_router
+from app.api.monitoring import router as monitoring_router
+from app.middleware.rate_limit import RateLimitMiddleware
+from app.monitoring import MetricsMiddleware
 from app.utils.logging import setup_logging
 from app.utils.errors import (
     BusinessLogicError, ValidationError, DatabaseError, ExternalServiceError,
@@ -44,6 +49,10 @@ async def lifespan(app: FastAPI):
         await init_database()
         logger.info("Database initialized successfully")
         
+        # Initialize Redis cache
+        await init_redis()
+        logger.info("Cache initialized successfully")
+        
         # Add any other startup tasks here
         logger.info("Application startup completed")
         
@@ -60,6 +69,10 @@ async def lifespan(app: FastAPI):
             # Close database connections
             await close_database()
             logger.info("Database connections closed")
+            
+            # Close Redis connections
+            await close_redis()
+            logger.info("Cache connections closed")
             
             # Add any other cleanup tasks here
             logger.info("Application shutdown completed")
@@ -100,6 +113,12 @@ def create_application() -> FastAPI:
         allow_methods=config.security.cors_methods,
         allow_headers=config.security.cors_headers,
     )
+    
+    # Add rate limiting middleware
+    app.add_middleware(RateLimitMiddleware)
+    
+    # Add metrics middleware
+    app.add_middleware(MetricsMiddleware)
     
     # Add exception handlers
     app.add_exception_handler(BusinessLogicError, business_logic_exception_handler)
@@ -165,7 +184,9 @@ def create_application() -> FastAPI:
             raise
     
     # Include routers
+    app.include_router(auth_router)
     app.include_router(items_router)
+    app.include_router(monitoring_router)
     
     # Root endpoint
     @app.get("/", summary="Root Endpoint")

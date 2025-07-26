@@ -149,3 +149,8 @@ async def init_database():
 async def close_database():
     """Close database connections on application shutdown."""
     await db_manager.close()
+
+
+def get_engine():
+    """Get the database engine."""
+    return db_manager.engine

@@ -4,7 +4,7 @@ Provides environment-based configuration with validation and type safety.
 """
 import os
 from typing import Optional
-from pydantic import BaseModel, ConfigDict, validator
+from pydantic import BaseModel, ConfigDict, field_validator
 
 
 class DatabaseConfig(BaseModel):
@@ -39,6 +39,21 @@ class LoggingConfig(BaseModel):
     include_request_id: bool = True
 
 
+class CacheConfig(BaseModel):
+    """Cache configuration settings."""
+    host: str = "localhost"
+    port: int = 6379
+    db: int = 0
+    password: Optional[str] = None
+    socket_connect_timeout: int = 5
+    socket_timeout: int = 5
+    
+    # Cache TTL settings (in seconds)
+    default_ttl: int = 300  # 5 minutes
+    short_ttl: int = 60     # 1 minute
+    long_ttl: int = 3600    # 1 hour
+
+
 class SecurityConfig(BaseModel):
     """Security configuration settings."""
     cors_origins: list[str] = ["*"]
@@ -48,6 +63,11 @@ class SecurityConfig(BaseModel):
     # Rate limiting
     rate_limit_requests: int = 100
     rate_limit_window: int = 60  # seconds
+    
+    # JWT settings
+    secret_key: str = "your-secret-key-here-change-in-production"
+    access_token_expire_minutes: int = 30
+    refresh_token_expire_days: int = 7
 
 
 class AppConfig(BaseModel):
@@ -63,13 +83,17 @@ class AppConfig(BaseModel):
     # Database configuration
     database: DatabaseConfig = DatabaseConfig()
     
+    # Cache configuration
+    cache: CacheConfig = CacheConfig()
+    
     # Logging configuration
     logging: LoggingConfig = LoggingConfig()
     
     # Security configuration
     security: SecurityConfig = SecurityConfig()
     
-    @validator("environment")
+    @field_validator("environment")
+    @classmethod
     def validate_environment(cls, v):
         allowed = ["development", "staging", "production"]
         if v not in allowed:
@@ -95,6 +119,19 @@ def load_config() -> AppConfig:
         pool_recycle=int(os.getenv("DB_POOL_RECYCLE", "3600")),
     )
     
+    # Cache configuration
+    cache_config = CacheConfig(
+        host=os.getenv("REDIS_HOST", "localhost"),
+        port=int(os.getenv("REDIS_PORT", "6379")),
+        db=int(os.getenv("REDIS_DB", "0")),
+        password=os.getenv("REDIS_PASSWORD"),
+        socket_connect_timeout=int(os.getenv("REDIS_CONNECT_TIMEOUT", "5")),
+        socket_timeout=int(os.getenv("REDIS_TIMEOUT", "5")),
+        default_ttl=int(os.getenv("CACHE_DEFAULT_TTL", "300")),
+        short_ttl=int(os.getenv("CACHE_SHORT_TTL", "60")),
+        long_ttl=int(os.getenv("CACHE_LONG_TTL", "3600")),
+    )
+    
     # Logging configuration
     logging_config = LoggingConfig(
         level=os.getenv("LOG_LEVEL", "INFO"),
@@ -109,6 +146,9 @@ def load_config() -> AppConfig:
         cors_headers=os.getenv("CORS_HEADERS", "*").split(","),
         rate_limit_requests=int(os.getenv("RATE_LIMIT_REQUESTS", "100")),
         rate_limit_window=int(os.getenv("RATE_LIMIT_WINDOW", "60")),
+        secret_key=os.getenv("SECRET_KEY", "your-secret-key-here-change-in-production"),
+        access_token_expire_minutes=int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30")),
+        refresh_token_expire_days=int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", "7")),
     )
     
     # Main app configuration
@@ -119,6 +159,7 @@ def load_config() -> AppConfig:
         debug=os.getenv("DEBUG", "false").lower() == "true",
         environment=os.getenv("ENVIRONMENT", "development"),
         database=db_config,
+        cache=cache_config,
         logging=logging_config,
         security=security_config,
     )
