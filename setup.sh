@@ -203,7 +203,7 @@ run_tests() {
     source venv/bin/activate
     
     # Run tests
-    python -m pytest test_main.py -v
+    python -m pytest tests/test_main.py -v
     
     if [[ $? -eq 0 ]]; then
         print_success "All tests passed!"

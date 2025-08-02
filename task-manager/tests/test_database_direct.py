@@ -6,6 +6,10 @@ import os
 import asyncio
 import httpx
 from contextlib import asynccontextmanager
+import sys
+
+# Add parent directory to path to import from app
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Set environment variables for real database testing
 os.environ["USE_MOCK_DB"] = "false"
