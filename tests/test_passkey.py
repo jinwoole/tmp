@@ -21,19 +21,6 @@ client = TestClient(app)
 
 
 @pytest.fixture
-async def test_user(db_session: AsyncSession):
-    """Create a test user."""
-    user_repo = UserRepository(db_session)
-    user_data = UserCreate(
-        email="testuser@example.com",
-        username="testuser",
-        password="testpassword123"
-    )
-    user = await user_repo.create(user_data)
-    return user
-
-
-@pytest.fixture
 def mock_webauthn_service():
     """Mock WebAuthn service for testing."""
     with patch('app.api.passkey.webauthn_service') as mock:
@@ -43,6 +30,8 @@ def mock_webauthn_service():
 class TestPasskeyRegistration:
     """Test passkey registration endpoints."""
     
+    @pytest.mark.asyncio
+    @pytest.mark.asyncio
     async def test_begin_passkey_registration_success(self, test_user, db_session):
         """Test beginning passkey registration for valid user."""
         
@@ -69,6 +58,8 @@ class TestPasskeyRegistration:
         # Clean up
         app.dependency_overrides.clear()
     
+    @pytest.mark.asyncio
+    @pytest.mark.asyncio
     async def test_begin_passkey_registration_user_not_found(self, db_session):
         """Test beginning passkey registration for non-existent user."""
         
@@ -85,6 +76,8 @@ class TestPasskeyRegistration:
         
         app.dependency_overrides.clear()
     
+    @pytest.mark.asyncio
+    @pytest.mark.asyncio
     async def test_complete_passkey_registration_success(self, test_user, db_session, mock_webauthn_service):
         """Test completing passkey registration successfully."""
         
@@ -133,6 +126,7 @@ class TestPasskeyRegistration:
         
         app.dependency_overrides.clear()
     
+    @pytest.mark.asyncio
     async def test_complete_passkey_registration_verification_failed(self, test_user, db_session, mock_webauthn_service):
         """Test completing passkey registration with verification failure."""
         
@@ -174,6 +168,7 @@ class TestPasskeyRegistration:
 class TestPasskeyAuthentication:
     """Test passkey authentication endpoints."""
     
+    @pytest.mark.asyncio
     async def test_begin_passkey_authentication_with_username(self, test_user, db_session):
         """Test beginning passkey authentication with username."""
         
@@ -205,6 +200,7 @@ class TestPasskeyAuthentication:
         
         app.dependency_overrides.clear()
     
+    @pytest.mark.asyncio
     async def test_begin_passkey_authentication_usernameless(self, db_session):
         """Test beginning passkey authentication without username (usernameless flow)."""
         
@@ -224,6 +220,7 @@ class TestPasskeyAuthentication:
         
         app.dependency_overrides.clear()
     
+    @pytest.mark.asyncio
     async def test_begin_passkey_authentication_no_credentials(self, test_user, db_session):
         """Test beginning passkey authentication for user with no credentials."""
         
@@ -240,6 +237,7 @@ class TestPasskeyAuthentication:
         
         app.dependency_overrides.clear()
     
+    @pytest.mark.asyncio
     async def test_complete_passkey_authentication_success(self, test_user, db_session, mock_webauthn_service):
         """Test completing passkey authentication successfully."""
         
@@ -288,6 +286,7 @@ class TestPasskeyAuthentication:
         
         app.dependency_overrides.clear()
     
+    @pytest.mark.asyncio
     async def test_complete_passkey_authentication_invalid_credential(self, db_session, mock_webauthn_service):
         """Test completing passkey authentication with invalid credential."""
         
@@ -319,6 +318,7 @@ class TestPasskeyAuthentication:
 class TestPasskeyManagement:
     """Test passkey management endpoints."""
     
+    @pytest.mark.asyncio
     async def test_list_user_passkeys(self, test_user, db_session):
         """Test listing user's passkey credentials."""
         
@@ -361,6 +361,7 @@ class TestPasskeyManagement:
         
         app.dependency_overrides.clear()
     
+    @pytest.mark.asyncio
     async def test_delete_passkey_credential(self, test_user, db_session):
         """Test deleting a passkey credential."""
         
@@ -393,6 +394,7 @@ class TestPasskeyManagement:
         
         app.dependency_overrides.clear()
     
+    @pytest.mark.asyncio
     async def test_delete_nonexistent_passkey_credential(self, test_user, db_session):
         """Test deleting a non-existent passkey credential."""
         
