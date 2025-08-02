@@ -8,6 +8,8 @@ from fastapi.testclient import TestClient
 
 # Ensure we use mock database for unit tests
 os.environ["USE_MOCK_DB"] = "true"
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from main import app
 from app.models.entities import reset_storage

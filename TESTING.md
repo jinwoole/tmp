@@ -5,13 +5,13 @@ This document explains how to run tests for the Enterprise FastAPI Application, 
 ## Test Types
 
 ### 1. Unit Tests (Mock Database)
-- **File**: `test_main.py`
+- **File**: `tests/test_main.py`
 - **Database**: Mock in-memory storage
 - **Purpose**: Fast unit tests for business logic validation
 - **Environment**: Uses `.env.mock` configuration
 
 ### 2. Integration Tests (Real PostgreSQL)
-- **File**: `test_integration.py`
+- **File**: `tests/test_integration.py`
 - **Database**: Real PostgreSQL 16 database
 - **Purpose**: End-to-end testing with actual database operations
 - **Environment**: Uses `.env.test` configuration
@@ -48,10 +48,10 @@ pip install -r requirements.txt
 ### Quick Start - Unit Tests Only
 ```bash
 # Run unit tests with mock database (fast)
-pytest test_main.py -v
+pytest tests/test_main.py -v
 
 # Run with coverage
-pytest test_main.py --cov=app --cov-report=html
+pytest tests/test_main.py --cov=app --cov-report=html
 ```
 
 ### Integration Tests with Real PostgreSQL
@@ -63,10 +63,10 @@ docker-compose --profile testing up -d postgres_test
 docker-compose logs postgres_test
 
 # 3. Run integration tests
-pytest test_integration.py -v
+pytest tests/test_integration.py -v
 
 # 4. Run all tests (unit + integration)
-pytest -v
+pytest tests/ -v
 
 # 5. Stop test database
 docker-compose --profile testing down
@@ -77,24 +77,24 @@ docker-compose --profile testing down
 #### Using Environment Files
 ```bash
 # Unit tests with mock database
-pytest test_main.py --envfile=.env.mock -v
+pytest tests/test_main.py --envfile=.env.mock -v
 
 # Integration tests with real database
-pytest test_integration.py --envfile=.env.test -v
+pytest tests/test_integration.py --envfile=.env.test -v
 ```
 
 #### Manual Environment Setup
 ```bash
 # For mock database tests
 export USE_MOCK_DB=true
-pytest test_main.py -v
+pytest tests/test_main.py -v
 
 # For integration tests
 export USE_MOCK_DB=false
 export DB_HOST=localhost
 export DB_PORT=5433
 export DB_NAME=fastapi_test_db
-pytest test_integration.py -v
+pytest tests/test_integration.py -v
 ```
 
 ## Test Coverage
@@ -126,7 +126,7 @@ docker-compose --profile full-stack up -d
 
 # Run tests against the containerized application
 export FASTAPI_URL=http://localhost:8000
-pytest test_integration.py -v
+pytest tests/test_integration.py -v
 
 # Clean up
 docker-compose --profile full-stack down
@@ -138,7 +138,7 @@ docker-compose --profile full-stack down
 docker-compose --profile testing up -d postgres_test
 
 # Run local app against containerized database
-pytest test_integration.py -v
+pytest tests/test_integration.py -v
 
 # Clean up
 docker-compose --profile testing down
@@ -160,7 +160,7 @@ jobs:
         with:
           python-version: '3.11'
       - run: pip install -r requirements.txt
-      - run: pytest test_main.py -v
+      - run: pytest tests/test_main.py -v
 
   integration-tests:
     runs-on: ubuntu-latest
@@ -184,7 +184,7 @@ jobs:
         with:
           python-version: '3.11'
       - run: pip install -r requirements.txt
-      - run: pytest test_integration.py -v
+      - run: pytest tests/test_integration.py -v
         env:
           USE_MOCK_DB: false
           DB_HOST: localhost
@@ -228,7 +228,7 @@ pip install pytest-benchmark pytest-xdist
 pytest -n auto test_main.py test_integration.py
 
 # Benchmark specific operations
-pytest test_integration.py::test_concurrent_operations --benchmark-only
+pytest tests/test_integration.py::test_concurrent_operations --benchmark-only
 ```
 
 ## Test Data Management

@@ -3,11 +3,15 @@ Comprehensive test suite for the Enterprise FastAPI Application.
 Tests the new architecture with proper separation of concerns using mock database.
 """
 import os
+import sys
 import pytest
 from fastapi.testclient import TestClient
 
 # Ensure we use mock database for unit tests
 os.environ["USE_MOCK_DB"] = "true"
+
+# Add parent directory to path to import from app
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from main import app
 from app.models.entities import reset_storage
