@@ -26,6 +26,9 @@ pydantic-settings==2.6.1
 slowapi==0.1.9
 prometheus-client==0.21.1
 
+# WebAuthn/Passkey dependencies
+cbor2==5.6.5
+
 # Testing dependencies
 pytest-asyncio==0.24.0
 pytest-docker==3.1.1

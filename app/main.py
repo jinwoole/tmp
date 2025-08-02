@@ -22,6 +22,7 @@ from app.models.database import init_database, close_database
 from app.cache.redis_client import init_redis, close_redis
 from app.api.items import router as items_router
 from app.api.auth import router as auth_router
+from app.api.passkey import router as passkey_router
 from app.api.monitoring import router as monitoring_router
 from app.middleware.rate_limit import RateLimitMiddleware
 from app.monitoring import MetricsMiddleware
@@ -185,6 +186,7 @@ def create_application() -> FastAPI:
     
     # Include routers
     app.include_router(auth_router)
+    app.include_router(passkey_router)
     app.include_router(items_router)
     app.include_router(monitoring_router)
     
