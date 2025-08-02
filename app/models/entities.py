@@ -6,7 +6,7 @@ import os
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, func, Text
+from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, func, Text, ForeignKey, LargeBinary
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
@@ -26,8 +26,32 @@ class User(Base):
     created_at = Column(DateTime, default=func.now(), nullable=False)
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now(), nullable=False)
     
+    # Relationship to passkey credentials
+    passkey_credentials = relationship("PasskeyCredential", back_populates="user")
+    
     def __repr__(self):
         return f"<User(id={self.id}, username='{self.username}', email='{self.email}')>"
+
+
+class PasskeyCredential(Base):
+    """Passkey credential database model for WebAuthn."""
+    __tablename__ = "passkey_credentials"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    credential_id = Column(String(255), unique=True, index=True, nullable=False)  # Base64URL encoded
+    public_key = Column(LargeBinary, nullable=False)  # CBOR encoded public key
+    sign_count = Column(Integer, default=0, nullable=False)
+    name = Column(String(255), nullable=True)  # User-friendly name for the credential
+    created_at = Column(DateTime, default=func.now(), nullable=False)
+    last_used = Column(DateTime, nullable=True)
+    is_active = Column(Boolean, default=True, nullable=False)
+    
+    # Relationship to user
+    user = relationship("User", back_populates="passkey_credentials")
+    
+    def __repr__(self):
+        return f"<PasskeyCredential(id={self.id}, user_id={self.user_id}, credential_id='{self.credential_id[:10]}...')>"
 
 
 class Item(Base):

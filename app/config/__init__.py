@@ -68,6 +68,11 @@ class SecurityConfig(BaseModel):
     secret_key: str = "your-secret-key-here-change-in-production"
     access_token_expire_minutes: int = 30
     refresh_token_expire_days: int = 7
+    
+    # Passkey/WebAuthn settings
+    passkey_rp_id: str = "localhost"
+    passkey_rp_name: str = "Enterprise FastAPI Application"
+    passkey_challenge_timeout: int = 300  # seconds
 
 
 class AppConfig(BaseModel):
@@ -149,6 +154,9 @@ def load_config() -> AppConfig:
         secret_key=os.getenv("SECRET_KEY", "your-secret-key-here-change-in-production"),
         access_token_expire_minutes=int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30")),
         refresh_token_expire_days=int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", "7")),
+        passkey_rp_id=os.getenv("PASSKEY_RP_ID", "localhost"),
+        passkey_rp_name=os.getenv("PASSKEY_RP_NAME", "Enterprise FastAPI Application"),
+        passkey_challenge_timeout=int(os.getenv("PASSKEY_CHALLENGE_TIMEOUT", "300")),
     )
     
     # Main app configuration
