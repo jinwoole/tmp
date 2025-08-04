@@ -3,6 +3,7 @@ Simplified integration tests for PostgreSQL connectivity.
 Tests database operations directly without FastAPI TestClient to avoid event loop conflicts.
 """
 import os
+import pytest
 import asyncio
 import httpx
 from contextlib import asynccontextmanager
@@ -27,6 +28,7 @@ from sqlalchemy import text, select
 
 
 @asynccontextmanager
+@pytest.mark.asyncio
 async def test_database():
     """Context manager for test database setup and cleanup."""
     await db_manager.initialize()
@@ -50,6 +52,7 @@ async def clean_tables():
         await conn.execute(text("TRUNCATE TABLE items RESTART IDENTITY CASCADE"))
 
 
+@pytest.mark.asyncio
 async def test_database_connection():
     """Test basic database connectivity."""
     async with test_database():
@@ -61,6 +64,7 @@ async def test_database_connection():
         print("✓ Database connection test passed")
 
 
+@pytest.mark.asyncio
 async def test_table_creation():
     """Test that tables are created properly."""
     async with test_database():
@@ -77,6 +81,7 @@ async def test_table_creation():
         print("✓ Table creation test passed")
 
 
+@pytest.mark.asyncio
 async def test_item_repository_crud():
     """Test CRUD operations using the repository."""
     async with test_database():
@@ -117,6 +122,7 @@ async def test_item_repository_crud():
         print("✓ Repository CRUD operations test passed")
 
 
+@pytest.mark.asyncio
 async def test_search_functionality():
     """Test search functionality."""
     async with test_database():
@@ -148,6 +154,7 @@ async def test_search_functionality():
         print("✓ Search functionality test passed")
 
 
+@pytest.mark.asyncio
 async def test_pagination():
     """Test pagination functionality."""
     async with test_database():
@@ -175,6 +182,7 @@ async def test_pagination():
         print("✓ Pagination test passed")
 
 
+@pytest.mark.asyncio
 async def test_concurrent_operations():
     """Test concurrent database operations."""
     async with test_database():

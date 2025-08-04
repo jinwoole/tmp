@@ -4,6 +4,7 @@ These tests start the actual FastAPI server and test the HTTP endpoints.
 """
 import os
 import time
+import pytest
 import asyncio
 import httpx
 import subprocess
@@ -28,6 +29,7 @@ from sqlalchemy import text
 
 
 @asynccontextmanager
+@pytest.mark.asyncio
 async def test_database_setup():
     """Setup and cleanup test database."""
     await db_manager.initialize()
@@ -93,6 +95,7 @@ class FastAPITestServer:
             self.process.wait()
 
 
+@pytest.mark.asyncio
 async def test_api_endpoints():
     """Test FastAPI endpoints with real database."""
     async with test_database_setup():
@@ -181,6 +184,7 @@ async def test_api_endpoints():
             print("\n🎉 All API integration tests passed!")
 
 
+@pytest.mark.asyncio
 async def test_with_standalone_server():
     """Test API with a standalone server."""
     async with test_database_setup():
