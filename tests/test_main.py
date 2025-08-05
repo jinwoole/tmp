@@ -24,18 +24,52 @@ def reset_test_data():
     """Reset test data before each test."""
     import asyncio
     from app.models.database import db_manager
+    from app.models.entities import reset_storage
+    
+    # Ensure we use mock database
+    os.environ["USE_MOCK_DB"] = "true"
+    
+    # Reset mock storage first
+    reset_storage()
     
     # Initialize database for tests
     try:
-        asyncio.get_event_loop().run_until_complete(db_manager.initialize())
-    except RuntimeError:
-        # If there's no event loop, create one
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         loop.run_until_complete(db_manager.initialize())
+        
+        # Also clear real database tables if they exist
+        loop.run_until_complete(_clear_database())
         loop.close()
+    except Exception:
+        # If there's no event loop or database setup fails, just continue
+        pass
     
+    yield
+    
+    # Clean up after test
     reset_storage()
+    try:
+        loop = asyncio.new_event_loop() 
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(_clear_database())
+        loop.close()
+    except Exception:
+        pass
+
+
+async def _clear_database():
+    """Clear all data from database tables."""
+    try:
+        from app.models.database import db_manager
+        if db_manager.async_session_maker:
+            async with db_manager.async_session_maker() as session:
+                # Clear items table
+                await session.execute("DELETE FROM items")
+                await session.commit()
+    except Exception:
+        # If database clearing fails, just continue - some tests use mock DB
+        pass
 
 
 def test_read_root():

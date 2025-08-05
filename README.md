@@ -439,4 +439,4 @@ This template is released under the MIT License. See LICENSE file for details.
 
 ---
 
-**Need help?** Open an issue or check the [evaluation report](TEMPLATE_EVALUATION_REPORT.md) for detailed testing results and recommendations.
+**Need help?** Open an issue or check the [evaluation report](docs/evaluation-report.md) for detailed testing results and recommendations.
