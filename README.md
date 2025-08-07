@@ -26,7 +26,7 @@ docker compose up -d postgres redis
 # Activate virtual environment and run
 source venv/bin/activate
 alembic upgrade head
-fastapi dev main.py
+fastapi dev app.main:app
 ```
 
 Your service will be available at:
@@ -54,6 +54,7 @@ my-service/
 │   ├── repositories/     # Data access layer
 │   └── services/         # Infrastructure services
 ├── alembic/              # Database migrations
+├── examples/             # 💡 Example scripts and demos
 ├── tests/                # Test suite
 ├── docker-compose.yml    # Local development infrastructure
 └── requirements.txt      # Python dependencies

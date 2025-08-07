@@ -253,7 +253,7 @@ print_instructions() {
     echo -e "   ${BLUE}app/business/interfaces/${NC} - Abstract interfaces"
     echo ""
     echo "5. Run the development server:"
-    echo -e "   ${BLUE}fastapi dev main.py${NC}"
+    echo -e "   ${BLUE}fastapi dev app.main:app${NC}"
     echo ""
     echo "6. Set up your database (if using PostgreSQL):"
     echo -e "   ${BLUE}docker-compose up -d postgres redis${NC}"
