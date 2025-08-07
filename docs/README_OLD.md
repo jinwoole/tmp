@@ -10,10 +10,10 @@ cd tmp
 ./setup.sh my-service
 cd my-service
 source venv/bin/activate
-fastapi dev main.py
+fastapi dev app.main:app
 ```
 
-Visit http://127.0.0.1:8000/docs to see your API documentation.
+Visit http://localhost:8000/docs to see your API documentation.
 
 ## ✨ Features
 
@@ -72,7 +72,7 @@ app/
 
 ### Prerequisites
 
-- Python 3.8+
+- Python 3.9+
 - PostgreSQL 12+ (optional - uses mock DB by default)
 - Redis (optional - caching features)
 - Git
@@ -85,7 +85,7 @@ The easiest way to create a new service:
 ./setup.sh my-awesome-service
 cd my-awesome-service
 source venv/bin/activate
-fastapi dev main.py
+fastapi dev app.main:app
 ```
 
 The setup script will:
@@ -125,7 +125,7 @@ alembic upgrade head
 
 4. **Start the application:**
 ```bash
-fastapi dev main.py
+fastapi dev app.main:app
 ```
 
 ## 🔧 Configuration

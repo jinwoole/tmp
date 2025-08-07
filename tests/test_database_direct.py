@@ -18,7 +18,15 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 os.environ["USE_MOCK_DB"] = "true"
 
 from app.models.database import db_manager
-from app.models.entities import Base, Item
+from app.models.entities import Base
+
+
+@pytest_asyncio.fixture(autouse=True)
+async def clean_database():
+    """Clean database before each test."""
+    # For mock database, clear the storage
+    from app.models.entities import _items_storage
+    _items_storage.clear(), Item
 from app.repositories.item_repository import ItemRepository
 from app.models.schemas import ItemCreate, ItemUpdate, PaginationParams
 from sqlalchemy import text, select
@@ -67,12 +75,9 @@ async def setup_test_database():
 @pytest_asyncio.fixture(autouse=True)
 async def clean_database():
     """Clean database before each test."""
-    if db_manager.engine and db_manager.is_connected:
-        try:
-            async with db_manager.engine.begin() as conn:
-                await conn.execute(text("TRUNCATE TABLE items RESTART IDENTITY CASCADE"))
-        except Exception as e:
-            print(f"Failed to clean database: {e}")
+    # For mock database, clear the storage
+    from app.models.entities import _items_storage
+    _items_storage.clear()
 
 
 @pytest.mark.asyncio
@@ -144,10 +149,10 @@ async def test_search_functionality():
     await repo.create(ItemCreate(name="Apple MacBook", price=1299.99))
     
     # Test search
-    search_results = await repo.search("Apple")
-    assert len(search_results.items) == 2
-    assert search_results.total == 2
-    assert all("Apple" in item.name for item in search_results.items)
+    search_results, total = await repo.search("Apple")
+    assert len(search_results) == 2
+    assert total == 2
+    assert all("Apple" in item.name for item in search_results)
     
     print("✓ Search functionality test passed")
 
@@ -162,15 +167,13 @@ async def test_pagination():
         await repo.create(ItemCreate(name=f"Item {i}", price=float(i * 10)))
     
     # Test pagination
-    page1 = await repo.get_all(PaginationParams(page=1, limit=5))
-    assert len(page1.items) == 5
-    assert page1.total == 10
-    assert page1.page == 1
-    assert page1.pages == 2
+    page1_items, page1_total = await repo.get_all(PaginationParams(page=1, limit=5))
+    assert len(page1_items) == 5
+    assert page1_total == 10
     
-    page2 = await repo.get_all(PaginationParams(page=2, limit=5))
-    assert len(page2.items) == 5
-    assert page2.page == 2
+    page2_items, page2_total = await repo.get_all(PaginationParams(page=2, limit=5))
+    assert len(page2_items) == 5
+    assert page2_total == 10
     
     print("✓ Pagination test passed")
 
