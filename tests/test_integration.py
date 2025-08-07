@@ -20,7 +20,7 @@ os.environ["DB_NAME"] = "fastapi_test_db"
 os.environ["DB_USER"] = "postgres"
 os.environ["DB_PASSWORD"] = "password"
 
-from main import app
+from app.main import app
 from app.models.database import db_manager
 from app.models.entities import Base
 

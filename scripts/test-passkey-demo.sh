@@ -132,7 +132,7 @@ main() {
         alembic upgrade head
         
         # Start the FastAPI server in background
-        uvicorn main:app --host 0.0.0.0 --port 8000 --reload &
+        uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload &
         FASTAPI_PID=$!
         
         # Wait for FastAPI to start

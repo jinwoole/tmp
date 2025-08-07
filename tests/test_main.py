@@ -13,7 +13,7 @@ os.environ["USE_MOCK_DB"] = "true"
 # Add parent directory to path to import from app
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from main import app
+from app.main import app
 from app.models.entities import reset_storage
 
 client = TestClient(app)
