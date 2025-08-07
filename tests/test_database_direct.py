@@ -4,6 +4,7 @@ Tests database operations directly without FastAPI TestClient to avoid event loo
 """
 import os
 import pytest
+import pytest_asyncio
 import asyncio
 import httpx
 from contextlib import asynccontextmanager
@@ -68,7 +69,7 @@ async def setup_test_database():
             pass  # Ignore cleanup errors
 
 
-@pytest.fixture(autouse=True)
+@pytest_asyncio.fixture(autouse=True)
 async def clean_database():
     """Clean database before each test."""
     if db_manager.engine and db_manager.is_connected:
@@ -110,35 +111,34 @@ async def test_table_creation():
 @pytest.mark.asyncio
 async def test_item_repository_crud():
     """Test CRUD operations with ItemRepository."""
-    async with db_manager.get_session() as session:
-        repo = ItemRepository(session)
-        
-        # Test CREATE
-        item_data = ItemCreate(name="Test Item", price=99.99, is_offer=True)
-        created_item = await repo.create(item_data)
-        assert created_item.name == "Test Item"
-        assert created_item.price == 99.99
-        assert created_item.is_offer is True
-        assert created_item.id is not None
-        
-        # Test READ
-        retrieved_item = await repo.get(created_item.id)
-        assert retrieved_item is not None
-        assert retrieved_item.name == "Test Item"
-        
-        # Test UPDATE
-        update_data = ItemUpdate(name="Updated Item", price=149.99)
-        updated_item = await repo.update(created_item.id, update_data)
-        assert updated_item.name == "Updated Item"
-        assert updated_item.price == 149.99
-        
-        # Test DELETE
-        deleted = await repo.delete(created_item.id)
-        assert deleted is True
-        
-        # Verify deletion
-        deleted_item = await repo.get(created_item.id)
-        assert deleted_item is None
+    repo = ItemRepository()
+    
+    # Test CREATE
+    item_data = ItemCreate(name="Test Item", price=99.99, is_offer=True)
+    created_item = await repo.create(item_data)
+    assert created_item.name == "Test Item"
+    assert created_item.price == 99.99
+    assert created_item.is_offer is True
+    assert created_item.id is not None
+    
+    # Test READ
+    retrieved_item = await repo.get(created_item.id)
+    assert retrieved_item is not None
+    assert retrieved_item.name == "Test Item"
+    
+    # Test UPDATE
+    update_data = ItemUpdate(name="Updated Item", price=149.99)
+    updated_item = await repo.update(created_item.id, update_data)
+    assert updated_item.name == "Updated Item"
+    assert updated_item.price == 149.99
+    
+    # Test DELETE
+    deleted = await repo.delete(created_item.id)
+    assert deleted is True
+    
+    # Verify deletion
+    deleted_item = await repo.get(created_item.id)
+    assert deleted_item is None
     
     print("✓ CRUD operations test passed")
 
@@ -146,19 +146,18 @@ async def test_item_repository_crud():
 @pytest.mark.asyncio
 async def test_search_functionality():
     """Test search functionality."""
-    async with db_manager.get_session() as session:
-        repo = ItemRepository(session)
-        
-        # Create test items
-        await repo.create(ItemCreate(name="Apple iPhone", price=999.99))
-        await repo.create(ItemCreate(name="Samsung Galaxy", price=899.99))
-        await repo.create(ItemCreate(name="Apple MacBook", price=1299.99))
-        
-        # Test search
-        search_results = await repo.search("Apple")
-        assert len(search_results.items) == 2
-        assert search_results.total == 2
-        assert all("Apple" in item.name for item in search_results.items)
+    repo = ItemRepository()
+    
+    # Create test items
+    await repo.create(ItemCreate(name="Apple iPhone", price=999.99))
+    await repo.create(ItemCreate(name="Samsung Galaxy", price=899.99))
+    await repo.create(ItemCreate(name="Apple MacBook", price=1299.99))
+    
+    # Test search
+    search_results = await repo.search("Apple")
+    assert len(search_results.items) == 2
+    assert search_results.total == 2
+    assert all("Apple" in item.name for item in search_results.items)
     
     print("✓ Search functionality test passed")
 
@@ -166,23 +165,22 @@ async def test_search_functionality():
 @pytest.mark.asyncio
 async def test_pagination():
     """Test pagination functionality."""
-    async with db_manager.get_session() as session:
-        repo = ItemRepository(session)
-        
-        # Create multiple items
-        for i in range(10):
-            await repo.create(ItemCreate(name=f"Item {i}", price=float(i * 10)))
-        
-        # Test pagination
-        page1 = await repo.get_all(PaginationParams(page=1, limit=5))
-        assert len(page1.items) == 5
-        assert page1.total == 10
-        assert page1.page == 1
-        assert page1.pages == 2
-        
-        page2 = await repo.get_all(PaginationParams(page=2, limit=5))
-        assert len(page2.items) == 5
-        assert page2.page == 2
+    repo = ItemRepository()
+    
+    # Create multiple items
+    for i in range(10):
+        await repo.create(ItemCreate(name=f"Item {i}", price=float(i * 10)))
+    
+    # Test pagination
+    page1 = await repo.get_all(PaginationParams(page=1, limit=5))
+    assert len(page1.items) == 5
+    assert page1.total == 10
+    assert page1.page == 1
+    assert page1.pages == 2
+    
+    page2 = await repo.get_all(PaginationParams(page=2, limit=5))
+    assert len(page2.items) == 5
+    assert page2.page == 2
     
     print("✓ Pagination test passed")
 
@@ -192,15 +190,14 @@ async def test_concurrent_operations():
     """Test concurrent database operations."""
     import asyncio
     
-    async def create_item(session, index):
-        repo = ItemRepository(session)
+    async def create_item(index):
+        repo = ItemRepository()
         return await repo.create(ItemCreate(name=f"Concurrent Item {index}", price=float(index)))
     
     # Create multiple items concurrently
-    async with db_manager.get_session() as session:
-        tasks = [create_item(session, i) for i in range(5)]
-        results = await asyncio.gather(*tasks)
-        
-        assert len(results) == 5
-        assert all(item.id is not None for item in results)
+    tasks = [create_item(i) for i in range(5)]
+    results = await asyncio.gather(*tasks)
+    
+    assert len(results) == 5
+    assert all(item.id is not None for item in results)
     

@@ -1,6 +1,6 @@
 # Testing Guide
 
-This document explains how to run tests for the Enterprise FastAPI Application, including both mock database tests and real PostgreSQL integration tests.
+This document explains how to run tests for the Enterprise FastAPI Application, including both mock database tests and PostgreSQL integration tests.
 
 ## Test Types
 
@@ -8,13 +8,18 @@ This document explains how to run tests for the Enterprise FastAPI Application, 
 - **File**: `tests/test_main.py`
 - **Database**: Mock in-memory storage
 - **Purpose**: Fast unit tests for business logic validation
-- **Environment**: Uses `.env.mock` configuration
+- **Environment**: Uses mock database by default
 
 ### 2. Integration Tests (Real PostgreSQL)
-- **File**: `tests/test_integration.py`
+- **Files**: `tests/test_integration.py`, `tests/test_database_direct.py`
 - **Database**: Real PostgreSQL 16 database
 - **Purpose**: End-to-end testing with actual database operations
-- **Environment**: Uses `.env.test` configuration
+- **Environment**: Requires PostgreSQL database setup
+
+### 3. Authentication Tests
+- **Files**: `tests/test_passkey.py`, `tests/test_webauthn_service.py`
+- **Purpose**: Test passkey/WebAuthn authentication functionality
+- **Environment**: Mock-based testing
 
 ## Prerequisites
 
@@ -31,7 +36,7 @@ pip install -r requirements.txt
 
 2. Start PostgreSQL using Docker Compose:
    ```bash
-   # Start test database only
+   # Start test database only  
    docker-compose --profile testing up -d postgres_test
    
    # Or start both development and test databases
@@ -40,7 +45,7 @@ pip install -r requirements.txt
 
 3. Verify PostgreSQL is running:
    ```bash
-   docker-compose ps
+   docker-compose ps postgres_test
    ```
 
 ## Running Tests
@@ -52,6 +57,9 @@ pytest tests/test_main.py -v
 
 # Run with coverage
 pytest tests/test_main.py --cov=app --cov-report=html
+
+# Run authentication tests
+pytest tests/test_passkey.py tests/test_webauthn_service.py -v
 ```
 
 ### Integration Tests with Real PostgreSQL
@@ -63,9 +71,9 @@ docker-compose --profile testing up -d postgres_test
 docker-compose logs postgres_test
 
 # 3. Run integration tests
-pytest tests/test_integration.py -v
+pytest tests/test_integration.py tests/test_database_direct.py -v
 
-# 4. Run all tests (unit + integration)
+# 4. Run all tests (unit + integration + auth)
 pytest tests/ -v
 
 # 5. Stop test database
@@ -74,39 +82,32 @@ docker-compose --profile testing down
 
 ### Running Tests in Different Environments
 
-#### Using Environment Files
+#### Using Environment Variables
 ```bash
-# Unit tests with mock database
-pytest tests/test_main.py --envfile=.env.mock -v
-
-# Integration tests with real database
-pytest tests/test_integration.py --envfile=.env.test -v
-```
-
-#### Manual Environment Setup
-```bash
-# For mock database tests
-export USE_MOCK_DB=true
+# Unit tests with mock database (default)
 pytest tests/test_main.py -v
 
-# For integration tests
+# Integration tests with real database
 export USE_MOCK_DB=false
 export DB_HOST=localhost
 export DB_PORT=5433
 export DB_NAME=fastapi_test_db
-pytest tests/test_integration.py -v
+export DB_USER=postgres
+export DB_PASSWORD=password
+pytest tests/test_integration.py tests/test_database_direct.py -v
 ```
 
 ## Test Coverage
 
 ### Unit Tests Cover:
 - ✅ API endpoint functionality
-- ✅ Business logic validation
+- ✅ Business logic validation  
 - ✅ Error handling
 - ✅ Request/response validation
 - ✅ Pagination logic
 - ✅ Search functionality
 - ✅ Mock database operations
+- ✅ Request ID tracking
 
 ### Integration Tests Cover:
 - ✅ Real PostgreSQL database operations
@@ -114,8 +115,14 @@ pytest tests/test_integration.py -v
 - ✅ Connection pooling
 - ✅ Concurrent operations
 - ✅ Database constraints
-- ✅ Full-text search
-- ✅ Performance under load
+- ✅ CRUD operations with actual data persistence
+
+### Authentication Tests Cover:
+- ✅ WebAuthn/Passkey registration flow
+- ✅ Authentication challenge generation
+- ✅ Challenge storage and retrieval
+- ✅ Challenge expiration handling
+- ✅ Usernameless authentication
 
 ## Docker-based Testing
 
