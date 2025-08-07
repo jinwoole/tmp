@@ -1,5 +1,5 @@
 """JWT token creation and validation utilities."""
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional, Union
 from jose import JWTError, jwt
 from passlib.context import CryptContext
@@ -26,9 +26,9 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     to_encode = data.copy()
     
     if expires_delta:
-        expire = datetime.utcnow() + expires_delta
+        expire = datetime.now(timezone.utc) + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(minutes=config.security.access_token_expire_minutes)
+        expire = datetime.now(timezone.utc) + timedelta(minutes=config.security.access_token_expire_minutes)
     
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, config.security.secret_key, algorithm=ALGORITHM)
@@ -90,7 +90,7 @@ def create_refresh_token(data: dict) -> str:
         Encoded JWT refresh token string
     """
     to_encode = data.copy()
-    expire = datetime.utcnow() + timedelta(days=config.security.refresh_token_expire_days)
+    expire = datetime.now(timezone.utc) + timedelta(days=config.security.refresh_token_expire_days)
     to_encode.update({"exp": expire, "type": "refresh"})
     encoded_jwt = jwt.encode(to_encode, config.security.secret_key, algorithm=ALGORITHM)
     return encoded_jwt

@@ -1,5 +1,5 @@
 """Repository for passkey credential operations."""
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update, delete
@@ -23,7 +23,7 @@ class PasskeyCredentialRepository:
             public_key=credential_data.public_key,
             sign_count=credential_data.sign_count,
             name=credential_data.name,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(timezone.utc),
             is_active=True
         )
         
@@ -58,7 +58,7 @@ class PasskeyCredentialRepository:
             update(PasskeyCredential)
             .where(PasskeyCredential.credential_id == credential_id)
             .where(PasskeyCredential.is_active == True)
-            .values(sign_count=sign_count, last_used=datetime.utcnow())
+            .values(sign_count=sign_count, last_used=datetime.now(timezone.utc))
         )
         await self.db.commit()
         return result.rowcount > 0

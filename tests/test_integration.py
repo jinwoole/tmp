@@ -25,22 +25,26 @@ from app.models.database import db_manager
 from app.models.entities import Base
 
 
-def setup_module():
-    """Setup module - initialize database for all tests."""
-    # Skip integration tests if database is not available
+def check_database_availability():
+    """Check if PostgreSQL test database is available."""
     try:
         import socket
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(1)
         result = sock.connect_ex(('localhost', 5433))
         sock.close()
-        
-        if result != 0:
-            pytest.skip("PostgreSQL database not available - skipping integration tests")
+        return result == 0
     except Exception:
-        pytest.skip("Cannot check database availability - skipping integration tests")
-    
-    # Run async setup in sync context
+        return False
+
+
+# Check database availability at module level
+if not check_database_availability():
+    pytest.skip("PostgreSQL database not available - skipping integration tests", allow_module_level=True)
+
+
+def setup_module():
+    """Setup module - initialize database for all tests."""
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     
@@ -50,10 +54,13 @@ def setup_module():
         
         # Create all tables
         if db_manager.engine:
-            loop.run_until_complete(_create_tables())
+            async def create_tables():
+                async with db_manager.engine.begin() as conn:
+                    await conn.run_sync(Base.metadata.create_all)
+            loop.run_until_complete(create_tables())
         
     except Exception as e:
-        print(f"Failed to setup test database: {e}")
+        loop.close()
         pytest.skip(f"Database setup failed: {e}")
     finally:
         loop.close()
@@ -67,7 +74,10 @@ def teardown_module():
     try:
         # Drop all tables
         if db_manager.engine:
-            loop.run_until_complete(_drop_tables())
+            async def drop_tables():
+                async with db_manager.engine.begin() as conn:
+                    await conn.run_sync(Base.metadata.drop_all)
+            loop.run_until_complete(drop_tables())
         
         # Close database connections
         loop.run_until_complete(db_manager.close())
@@ -78,24 +88,6 @@ def teardown_module():
         loop.close()
 
 
-async def _create_tables():
-    """Create database tables."""
-    async with db_manager.engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-
-
-async def _drop_tables():
-    """Drop database tables."""
-    async with db_manager.engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
-
-
-async def _clean_tables():
-    """Clean all data from tables."""
-    async with db_manager.engine.begin() as conn:
-        await conn.execute(text("TRUNCATE TABLE items RESTART IDENTITY CASCADE"))
-
-
 def setup_function():
     """Setup function - clean database before each test."""
     loop = asyncio.new_event_loop()
@@ -103,7 +95,10 @@ def setup_function():
     
     try:
         if db_manager.engine and db_manager.is_connected:
-            loop.run_until_complete(_clean_tables())
+            async def clean_tables():
+                async with db_manager.engine.begin() as conn:
+                    await conn.execute(text("TRUNCATE TABLE items RESTART IDENTITY CASCADE"))
+            loop.run_until_complete(clean_tables())
     except Exception as e:
         print(f"Failed to clean database: {e}")
     finally:
@@ -272,7 +267,6 @@ class TestDatabaseIntegration:
     def test_concurrent_operations(self):
         """Test concurrent database operations."""
         import threading
-        import time
         
         results = []
         

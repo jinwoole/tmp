@@ -6,7 +6,7 @@ import json
 import os
 import secrets
 import struct
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional, Dict, Any, List, Tuple
 
 import cbor2
@@ -33,7 +33,7 @@ class WebAuthnService:
     
     def store_challenge(self, user_id: int, challenge: str, expires_in: int = 300) -> None:
         """Store challenge for later verification."""
-        expires_at = datetime.utcnow() + timedelta(seconds=expires_in)
+        expires_at = datetime.now(timezone.utc) + timedelta(seconds=expires_in)
         self.challenge_cache[user_id] = {
             'challenge': challenge,
             'expires_at': expires_at
@@ -45,7 +45,7 @@ class WebAuthnService:
         if not challenge_data:
             return None
         
-        if datetime.utcnow() > challenge_data['expires_at']:
+        if datetime.now(timezone.utc) > challenge_data['expires_at']:
             del self.challenge_cache[user_id]
             return None
         
