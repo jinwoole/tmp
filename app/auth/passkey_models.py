@@ -1,7 +1,7 @@
 """Passkey authentication models and schemas."""
 from datetime import datetime
 from typing import Optional, Dict, Any
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class PasskeyCredentialBase(BaseModel):
@@ -25,8 +25,7 @@ class PasskeyCredential(PasskeyCredentialBase):
     last_used: Optional[datetime] = None
     is_active: bool = True
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class WebAuthnRegistrationChallenge(BaseModel):
