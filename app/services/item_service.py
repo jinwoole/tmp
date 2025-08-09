@@ -56,8 +56,8 @@ class ItemService:
             if pagination is None:
                 pagination = PaginationParams()
             
-            db_items, total = await self.item_repository.get_all(pagination)
-            
+            db_response = await self.item_repository.get_all(pagination)
+
             # Convert database models to Pydantic models
             items = [
                 Item(
@@ -66,16 +66,16 @@ class ItemService:
                     price=db_item.price,
                     is_offer=db_item.is_offer,
                     created_at=db_item.created_at,
-                    updated_at=db_item.updated_at
+                    updated_at=db_item.updated_at,
                 )
-                for db_item in db_items
+                for db_item in db_response.items
             ]
-            
+
             return PaginatedResponse.create(
                 items=items,
-                total=total,
-                page=pagination.page,
-                limit=pagination.limit
+                total=db_response.total,
+                page=db_response.page,
+                limit=db_response.limit,
             )
             
         except Exception as e:
@@ -190,8 +190,8 @@ class ItemService:
             if pagination is None:
                 pagination = PaginationParams()
             
-            db_items, total = await self.item_repository.search(query.strip(), pagination)
-            
+            db_response = await self.item_repository.search(query.strip(), pagination)
+
             # Convert database models to Pydantic models
             items = [
                 Item(
@@ -200,16 +200,16 @@ class ItemService:
                     price=db_item.price,
                     is_offer=db_item.is_offer,
                     created_at=db_item.created_at,
-                    updated_at=db_item.updated_at
+                    updated_at=db_item.updated_at,
                 )
-                for db_item in db_items
+                for db_item in db_response.items
             ]
-            
+
             return PaginatedResponse.create(
                 items=items,
-                total=total,
-                page=pagination.page,
-                limit=pagination.limit
+                total=db_response.total,
+                page=db_response.page,
+                limit=db_response.limit,
             )
             
         except Exception as e:
